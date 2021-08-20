@@ -46,6 +46,47 @@ include ../build/project-rules.mk
 # Firmware
 # --------
 
+FW_BOOT_HW  := ../../firmware/boot/boot-hw.hex
+FW_BOOT_SIM := ../../firmware/boot/boot-sim.hex
+FW_BIOS     := ../../firmware/bios/bios.hex
+FW_DT       := ../../firmware/dt/ice40linux.hex
+
 # Random boot.hex for synthesis
 $(BUILD_TMP)/boot.hex:
 	$(ICEBRAM) -g -s 0 32 1024 > $@
+
+# Build of BootLoader, BIOS code and DTB
+../../firmware/boot/%.hex: _force_run_
+	make -C ../../firmware/boot/ $*.hex
+
+../../firmware/bios/%.hex: _force_run_
+	make -C ../../firmware/bios/ $*.hex
+
+../../firmware/dt/ice40linux.dtb: _force_run_
+	make -C ../../firmware/dt/ ice40linux.dtb
+
+../../firmware/dt/ice40linux.hex: _force_run_
+	make -C ../../firmware/dt/ ice40linux.hex
+
+# Combined BootLoader & BIOS for BRAM init
+$(BUILD_TMP)/boot-hw.hex: $(FW_BOOT_HW) $(FW_BIOS)
+	./sw/hexmerge.py 0:$(FW_BOOT_HW) 256:$(FW_BIOS) > $@
+
+$(BUILD_TMP)/boot-sim.hex: $(FW_BOOT_SIM) $(FW_BIOS)
+	./sw/hexmerge.py 0:$(FW_BOOT_SIM) 256:$(FW_BIOS) > $@
+
+# Force call to update .hex from other Makefiles
+_force_run_:
+.PHONY: _force_run_
+
+
+# Final HW with BRAM init
+# -----------------------
+
+$(BUILD_TMP)/$(PROJ)_init.asc: $(BUILD_TMP)/$(PROJ).asc $(BUILD_TMP)/boot.hex $(BUILD_TMP)/boot-hw.hex
+	cat $< | icebram $(BUILD_TMP)/boot.hex $(BUILD_TMP)/boot-hw.hex > $@
+
+bin-init: $(BUILD_TMP)/$(PROJ)_init.bin
+
+prog-init: $(BUILD_TMP)/$(PROJ)_init.bin
+	$(ICEPROG) $<
