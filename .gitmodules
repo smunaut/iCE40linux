@@ -1,0 +1,15 @@
+[submodule "gateware/build"]
+	path = gateware/build
+	url = https://github.com/no2fpga/no2build.git
+[submodule "gateware/cores/no2misc"]
+	path = gateware/cores/no2misc
+	url = https://github.com/no2fpga/no2misc.git
+[submodule "gateware/cores/no2ice40"]
+	path = gateware/cores/no2ice40
+	url = https://github.com/no2fpga/no2ice40.git
+[submodule "gateware/cores/no2hyperbus"]
+	path = gateware/cores/no2hyperbus
+	url = https://github.com/no2fpga/no2hyperbus.git
+[submodule "gateware/cores/no2memcache"]
+	path = gateware/cores/no2memcache
+	url = https://github.com/no2fpga/no2memcache.git
