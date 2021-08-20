@@ -1,0 +1,4 @@
+*.elf
+*.bin
+*.hex
+*.dtb
