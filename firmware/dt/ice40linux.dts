@@ -1,0 +1,180 @@
+/*
+ * ice40 linux soc DTS
+ */
+
+/dts-v1/;
+
+/ {
+	#address-cells = <0x1>;
+	#size-cells = <0x1>;
+	compatible = "enjoy-digital,litex-vexriscv-soclinux";
+	model = "icebreaker no2soc-linux";
+
+	chosen {
+		bootargs = "mem=32M@0x40000000 rootwait console=nitrouart earlycon=sbi ubi.mtd=5 root=ubi0:rootfs rootfstype=ubifs init=/sbin/init swiotlb=32";
+		// bootargs = "mem=32M@0x40000000 rootwait console=nitrouart earlycon=sbi root=/dev/ram0 init=/sbin/init swiotlb=32";
+		// linux,initrd-start = <0x40800000>;
+		// linux,initrd-end   = <0x40d00000>;
+	};
+
+	cpus {
+		#address-cells = <0x1>;
+		#size-cells = <0x0>;
+		timebase-frequency = <15000000>;
+
+		cpu@0 {
+			clock-frequency = <15000000>;
+			compatible = "spinalhdl,vexriscv", "sifive,rocket0", "riscv";
+			d-tlb-sets = <0x1>;
+			d-tlb-size = <0x20>;
+			device_type = "cpu";
+			i-cache-block-size = <0x20>;
+			i-cache-sets = <0x1>;
+			i-cache-size = <0x800>;
+			i-tlb-sets = <0x1>;
+			i-tlb-size = <0x20>;
+			mmu-type = "riscv,sv32";
+			reg = <0x0>;
+			riscv,isa = "rv32ia";
+			sifive,itim = <0x1>;
+			status = "okay";
+			tlb-split;
+
+			L0: interrupt-controller {
+				#interrupt-cells = <0x00000001>;
+				interrupt-controller;
+				compatible = "riscv,cpu-intc";
+			};
+		};
+	};
+
+	memory@40000000 {
+		device_type = "memory";
+		reg = <0x40000000 0x2000000>;
+	};
+
+	/*
+	reserved-memory {
+		#address-cells = <1>;
+		#size-cells    = <1>;
+		ranges;
+		vexriscv_emulator@{emulator_base:x} {
+			reg = <0x{emulator_base:x} 0x{emulator_size:x}>;
+		};
+	};
+	*/
+
+	soc {
+		#address-cells = <0x1>;
+		#size-cells = <0x1>;
+		bus-frequency = <15000000>;
+		compatible = "simple-bus";
+		ranges;
+
+		intc0: interrupt-controller {
+		   interrupt-controller;
+			#interrupt-cells = <1>;
+		   compatible = "vexriscv,intc0";
+		   status = "okay";
+	   };
+
+		no2uart0: uart@81000000 {
+			device_type = "serial";
+			compatible = "no2fpga,no2uart";
+			reg = <0x81000000 0x100>;
+			status = "okay";
+		};
+
+		no2spi0: spi@82000000 {
+			compatible = "no2fpga,no2spi-simple";
+			reg = <0x82000000 0x100>;
+			status = "okay";
+
+			no2fpga,num-cs = <2>;
+			no2fpga,sck-frequency = <15000000>;
+
+			#address-cells = <1>;
+			#size-cells    = <0>;
+
+			flash: flash@0 {
+				compatible = "spi-nor";
+				reg = <0x0>;
+
+				#address-cells = <0x1>;
+				#size-cells    = <0x1>;
+
+				partition@0 {
+					label = "fpga";
+					reg = <0x00000000 0x00020000>;
+				};
+
+				partition@20000 {
+					label = "bios";
+					reg = <0x00020000 0x00010000>;
+				};
+
+				partition@30000 {
+					label = "dt";
+					reg = <0x00030000 0x00010000>;
+				};
+
+				partition@40000 {
+					label = "kernel";
+					reg = <0x00040000 0x005c0000>;
+				};
+
+				partition@600000 {
+					label = "ubi";
+					reg = <0x00600000 0x00a00000>;
+				};
+		   };
+
+			spidev0: spidev@1 {
+				compatible = "linux,spidev";
+				reg = <1>;
+				spi-max-frequency = <15000000>;
+				status = "okay";
+			 };
+		 };
+
+		no2rgb0: rgb@83000000 {
+			compatible = "no2fpga,no2ice40-rgb";
+			reg = <0x83000000 0x100>;
+			status = "okay";
+
+			timebase-frequency = <15000000>;
+			no2,hw-blink = <1>;
+
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			led@0 {
+				label = "red";
+				reg = <0>;
+				color = <1>; // LED_COLOR_ID_RED
+				linux,default-trigger = "panic";
+				// panic trigger doesn't support brightness control ... none/full only
+			};
+
+			led@1 {
+				label = "blue";
+				reg = <1>;
+				color = <3>; // LED_COLOR_ID_BLUE
+				linux,default-trigger = "heartbeat";
+				blink-brightness = <20>;
+			};
+
+			led@2 {
+				label = "green";
+				reg = <2>;
+				color = <2>; // LED_COLOR_ID_GREEN
+				linux,default-trigger = "mtd";
+				blink-brightness = <20>;
+			};
+		 };
+	};
+
+	aliases {
+		serial0 = &no2uart0;
+	};
+};
