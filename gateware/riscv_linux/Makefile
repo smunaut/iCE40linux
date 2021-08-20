@@ -90,3 +90,21 @@ bin-init: $(BUILD_TMP)/$(PROJ)_init.bin
 
 prog-init: $(BUILD_TMP)/$(PROJ)_init.bin
 	$(ICEPROG) $<
+
+
+# Memory image for Simulation
+# ---------------------------
+
+LINUX_IMAGE ?= $(BUILD_TMP)/linux.bin
+
+$(BUILD_TMP)/linux.bin:
+	@echo "[!] LINUX_IMAGE must point to the compiled Linux kernel image"
+	@exit 1
+
+$(BUILD_TMP)/linux.hex: $(LINUX_IMAGE)
+	hexdump -ve '1/4 "%08x\n"' $< > $@
+
+$(BUILD_TMP)/firmware.hex: $(BUILD_TMP)/linux.hex $(FW_DT)
+	./sw/hexmerge.py 0:$(BUILD_TMP)/linux.hex 4194304:$(FW_DT) > $@
+
+sim-firmware: $(BUILD_TMP)/firmware.hex
