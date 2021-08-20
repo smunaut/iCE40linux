@@ -108,3 +108,34 @@ $(BUILD_TMP)/firmware.hex: $(BUILD_TMP)/linux.hex $(FW_DT)
 	./sw/hexmerge.py 0:$(BUILD_TMP)/linux.hex 4194304:$(FW_DT) > $@
 
 sim-firmware: $(BUILD_TMP)/firmware.hex
+
+
+# CXX RTL
+# -------
+
+PROJ_CXXRTL_SRCS := $(PROJ_ALL_RTL_SRCS) $(PROJ_TOP_SRC)
+PROJ_CXXRTL_SRCS += $(abspath sim/ice40_cells_sim_cxxrtl.v)
+PROJ_CXXRTL_SRCS += $(CORE_no2memcache_DIR)/sim/mem_sim.v
+
+$(BUILD_TMP)/$(PROJ)-cxxrtl.ys: $(PROJ_CXXRTL_SRCS)
+	@echo "read_verilog -DSIM=1 -DCXXRTL=1 $(YOSYS_READ_ARGS) $(PROJ_SYNTH_INCLUDES) $(PROJ_SIM_INCLUDES) $(PROJ_CXXRTL_SRCS)" > $@
+	@echo "write_cxxrtl -O4 -g4 -header $(PROJ_TOP_MOD).cpp" >> $@
+
+$(BUILD_TMP)/$(PROJ).cxxrtl.rpt $(BUILD_TMP)/$(PROJ_TOP_MOD).cpp $(BUILD_TMP)/$(PROJ_TOP_MOD).h: $(PROJ_ALL_PREREQ) $(BUILD_TMP)/$(PROJ)-cxxrtl.ys $(BUILD_TMP)/boot-sim.hex
+	cd $(BUILD_TMP) && \
+		$(YOSYS) -s $(BUILD_TMP)/$(PROJ)-cxxrtl.ys \
+			 -l $(BUILD_TMP)/$(PROJ).cxxrtl.rpt
+
+$(BUILD_TMP)/%.o: $(BUILD_TMP)/%.cpp $(BUILD_TMP)/$(PROJ_TOP_MOD).h
+	clang -c -O2 -g -std=c++14 -I`yosys-config --datdir/include` $< -o $@
+
+$(BUILD_TMP)/top_tb.cpp: sim/top_tb.cpp
+	cp -a $< $@
+
+$(BUILD_TMP)/mem_sim_data.cpp: $(CORE_no2memcache_DIR)/sim/mem_sim_data.cpp
+	sed -e's/sim.h/top.h/' -e's/MEM_SIM_AW/23/' $< > $@
+
+$(BUILD_TMP)/top_tb_cxxrtl: $(BUILD_TMP)/top_tb.o $(BUILD_TMP)/top.o $(BUILD_TMP)/mem_sim_data.o
+	clang -lstdc++ -o $@ $^
+
+cxxrtl: $(BUILD_TMP)/top_tb_cxxrtl
