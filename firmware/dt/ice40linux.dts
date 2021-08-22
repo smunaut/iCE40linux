@@ -149,27 +149,27 @@
 			#size-cells = <0>;
 
 			led@0 {
-				label = "red";
-				reg = <0>;
-				color = <1>; // LED_COLOR_ID_RED
-				linux,default-trigger = "panic";
-				// panic trigger doesn't support brightness control ... none/full only
-			};
-
-			led@1 {
 				label = "blue";
-				reg = <1>;
+				reg = <0>;
 				color = <3>; // LED_COLOR_ID_BLUE
 				linux,default-trigger = "heartbeat";
 				blink-brightness = <20>;
 			};
 
-			led@2 {
+			led@1 {
 				label = "green";
-				reg = <2>;
+				reg = <1>;
 				color = <2>; // LED_COLOR_ID_GREEN
 				linux,default-trigger = "mtd";
 				blink-brightness = <20>;
+			};
+
+			led@2 {
+				label = "red";
+				reg = <2>;
+				color = <1>; // LED_COLOR_ID_RED
+				linux,default-trigger = "panic";
+				// panic trigger doesn't support brightness control ... none/full only
 			};
 		 };
 	};
