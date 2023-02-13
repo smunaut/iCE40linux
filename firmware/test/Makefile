@@ -30,7 +30,7 @@ test.elf: lnk-app.lds $(HEADERS) $(SOURCES)
 %.bin: %.elf
 	$(OBJCOPY) -O binary $< $@
 
-prog: fw_app.bin
+prog: test.bin
 	$(ICEPROG) -o 640k $<
 
 clean:
