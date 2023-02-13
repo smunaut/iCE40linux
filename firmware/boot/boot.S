@@ -78,6 +78,7 @@ _start:
 	j		1b
 
 	// Final jump
+2:
 		// Debug print
 #ifdef BOOT_DEBUG
 	la		a0, str_booting
@@ -87,7 +88,6 @@ _start:
 	lw		a0, 0(s4)			// Got corrupted by 'print_str', reload it
 #endif
 
-2:
 	jalr	ra, a0, 0
 	j		2b
 
