@@ -35,7 +35,7 @@ PACKAGE = sg48
 
 SEED ?= 0
 
-YOSYS_SYNTH_ARGS = -dffe_min_ce_use 4 # -abc2
+YOSYS_SYNTH_ARGS = -dffe_min_ce_use 4 -no-rw-check # -abc2
 NEXTPNR_ARGS  = --pre-pack data/clocks.py --pre-place $(CORE_no2ice40_DIR)/sw/serdes-nextpnr-place.py --seed $(SEED)
 NEXTPNR_ARGS += --timing-allow-fail
 
