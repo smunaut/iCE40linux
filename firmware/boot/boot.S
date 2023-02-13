@@ -96,7 +96,7 @@ manifest:
 	//  - Destination address in RAM
 	//  - Length
 	//  - Offset in flash
-    //
+	//
 	// The entry with length=0 is considered the last one
 	// and triggers the boot jump
 
