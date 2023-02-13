@@ -139,6 +139,7 @@ module platform (
 	assign sio_csn_oe  = spi_ena;
 
 	assign sio_mosi_o  = spi_data[7];
+	assign sio_miso_o  = 1'b0;
 	assign sio_clk_o   = spi_run_clk;
 	assign sio_csn_o   = spi_cs_n;
 
