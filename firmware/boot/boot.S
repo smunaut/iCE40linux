@@ -11,8 +11,12 @@
 #define BOOT_DEBUG
 //#define BOOT_SIM
 
+//#define MEM_HRAM
+//#define MEM_QPI
+
 /* Config */
 	.equ	HRAM_BASE, 0x80000000
+	.equ	QPI_BASE,  0x80000000
 	.equ	UART_BASE, 0x81000000
 	.equ    PLAT_BASE, 0x82000000
 
@@ -37,8 +41,17 @@ _start:
 	call	print_str
 #endif
 
+#ifndef BOOT_SIM
+# if defined(MEM_HRAM)
 	// HyperRAM setup
 	call	hram_init
+# elif defined(MEM_QPI)
+	// QPI setup
+	call	qpi_init
+# else
+#  error No memory init selected
+# endif
+#endif
 
 	// SPI init
 	call	spi_init
@@ -141,6 +154,8 @@ manifest:
 /* Hyper RAM                                                                */
 /* ------------------------------------------------------------------------ */
 
+#ifdef MEM_HRAM
+
 /* Registers and bits definitions */
 
 	.equ	HRAM_CSR,		0
@@ -200,12 +215,10 @@ hram_set_cr0:
  * Expects  : tp = HRAM_BASE
  */
 hram_wait_idle:
-#ifndef BOOT_SIM
 	/* while (!(hram_regs->csr & HRAM_CSR_IDLE_CFG)); */
 	lw		t0, HRAM_CSR(tp)
 	and		t0, t0, HRAM_CSR_IDLE_CFG
 	beq 	t0, zero, hram_wait_idle
-#endif
 	ret
 
 
@@ -255,6 +268,59 @@ hram_init:
 	// Done
 	mv		ra, t1
 	ret
+
+#endif
+
+
+// ---------------------------------------------------------------------------
+// QPI code
+// ---------------------------------------------------------------------------
+
+#ifdef MEM_QPI
+
+	.equ    QPI_CSR,  4 * 0x00
+	.equ	QPI_RF,   4 * 0x03
+
+/*
+ * Main QPI controller init
+ *
+ * Clobbers : t0, t1, t2, t3
+ */
+qpi_init:
+
+	// PSRAM controller base
+	li		t3, QPI_BASE
+
+	// Loop over the 4 chips
+	li		t1, 0x00000002
+	li		t2, 0x00000042
+1:
+
+	// Request external control
+	li		t0, 0x00000004
+	sw		t0, QPI_CSR(t3)
+
+	sw		t1, QPI_CSR(t3)
+
+	// Enable QSPI (0x35)
+	li		t0, 0x35000000
+	sw		t0, 0x40(t3)
+
+	// Read and discard response
+	lw		t0, QPI_RF(t3)
+
+	// Release external control
+	li		t0, 0x00000004
+	sw		t0, QPI_CSR(t3)
+
+	// Next chip
+	addi	t1, t1, 0x10
+	bne		t1, t2, 1b
+
+	// Return
+	ret
+
+#endif
 
 
 /* ------------------------------------------------------------------------ */

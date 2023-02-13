@@ -5,10 +5,13 @@ OBJCOPY = $(CROSS)objcopy
 
 CFLAGS=-Wall -Os -march=rv32i -mabi=ilp32 -ffreestanding -flto -nostartfiles -fomit-frame-pointer -Wl,--gc-section --specs=nano.specs
 
-all: boot-hw.hex boot-sim.hex
+all: boot-hram.hex boot-qpi.hex boot-sim.hex
 
-boot-hw.elf: lnk-boot.lds boot.S
-	$(CC) $(CFLAGS) -Wl,-Bstatic,-T,lnk-boot.lds,--strip-debug            -o $@ boot.S
+boot-hram.elf: lnk-boot.lds boot.S
+	$(CC) $(CFLAGS) -Wl,-Bstatic,-T,lnk-boot.lds,--strip-debug -DMEM_HRAM -o $@ boot.S
+
+boot-qpi.elf: lnk-boot.lds boot.S
+	$(CC) $(CFLAGS) -Wl,-Bstatic,-T,lnk-boot.lds,--strip-debug -DMEM_QPI -o $@ boot.S
 
 boot-sim.elf: lnk-boot.lds boot.S
 	$(CC) $(CFLAGS) -Wl,-Bstatic,-T,lnk-boot.lds,--strip-debug -DBOOT_SIM -o $@ boot.S

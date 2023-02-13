@@ -46,7 +46,7 @@ include ../build/project-rules.mk
 # Firmware
 # --------
 
-FW_BOOT_HW  := ../../firmware/boot/boot-hw.hex
+FW_BOOT_HW  := ../../firmware/boot/boot-hram.hex
 FW_BOOT_SIM := ../../firmware/boot/boot-sim.hex
 FW_BIOS     := ../../firmware/bios/bios.hex
 FW_DT       := ../../firmware/dt/ice40linux.hex
