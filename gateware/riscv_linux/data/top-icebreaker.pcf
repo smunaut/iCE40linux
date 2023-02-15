@@ -6,25 +6,46 @@ set_io -nowarn spi_flash_cs_n 16
 set_io -nowarn spi_ram_cs_n 37
 
 # Quad HyperRAM
-set_io --warn-no-port hram_dq[0] 43
-set_io --warn-no-port hram_dq[1] 38
-set_io --warn-no-port hram_dq[2] 34
-set_io --warn-no-port hram_dq[3] 31
-set_io --warn-no-port hram_dq[4] 28
-set_io --warn-no-port hram_dq[5] 32
-set_io --warn-no-port hram_dq[6] 36
-set_io --warn-no-port hram_dq[7] 42
+set_io -nowarn hram_dq[0] 43
+set_io -nowarn hram_dq[1] 38
+set_io -nowarn hram_dq[2] 34
+set_io -nowarn hram_dq[3] 31
+set_io -nowarn hram_dq[4] 28
+set_io -nowarn hram_dq[5] 32
+set_io -nowarn hram_dq[6] 36
+set_io -nowarn hram_dq[7] 42
 
-set_io --warn-no-port hram_rwds 44
+set_io -nowarn hram_rwds 44
 
-set_io --warn-no-port hram_ck 47
+set_io -nowarn hram_ck 47
 
-set_io --warn-no-port hram_rst_n 46
+set_io -nowarn hram_rst_n 46
 
-set_io --warn-no-port hram_cs_n[0] 2
-set_io --warn-no-port hram_cs_n[1] 48
-set_io --warn-no-port hram_cs_n[2] 4
-set_io --warn-no-port hram_cs_n[3] 3
+set_io -nowarn hram_cs_n[0] 2
+set_io -nowarn hram_cs_n[1] 48
+set_io -nowarn hram_cs_n[2] 4
+set_io -nowarn hram_cs_n[3] 3
+
+# Quad QPI PMOD
+	# PMOD1A
+set_io -nowarn             qpi_sck     45
+set_io -nowarn -pullup no  qpi_io[0]    2
+set_io -nowarn -pullup no  qpi_io[1]   47
+set_io -nowarn -pullup no  qpi_io[2]    3
+set_io -nowarn -pullup no  qpi_io[3]   48
+set_io -nowarn -pullup yes qpi_cs_n[0]  4
+set_io -nowarn -pullup yes qpi_cs_n[1] 46
+set_io -nowarn -pullup yes qpi_cs_n[2] 44
+
+	# PMOD 2
+#set_io -no-warn             qpi_sck     19
+#set_io -no-warn -pullup no  qpi_io[0]   25
+#set_io -no-warn -pullup no  qpi_io[1]   21
+#set_io -no-warn -pullup no  qpi_io[2]   26
+#set_io -no-warn -pullup no  qpi_io[3]   23
+#set_io -no-warn -pullup yes qpi_cs_n[0] 27
+#set_io -no-warn -pullup yes qpi_cs_n[1] 20
+#set_io -no-warn -pullup yes qpi_cs_n[2] 18
 
 # UART
 set_io -nowarn uart_rx 6

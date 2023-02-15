@@ -18,11 +18,20 @@ module top (
 	output wire spi_flash_cs_n,
 
 	// HyperRAM
+`ifdef MEM_HRAM
 	inout  wire [7:0] hram_dq,
 	inout  wire       hram_rwds,
 	output wire       hram_ck,
 	output wire [3:0] hram_cs_n,
 	output wire       hram_rst_n,
+`endif
+
+	// QPI
+`ifdef MEM_QPI
+	inout  wire [3:0] qpi_io,
+	output wire       qpi_sck,
+	output wire [2:0] qpi_cs_n,
+`endif
 
 	// Debug UART
 	input  wire uart_rx,
@@ -119,6 +128,7 @@ module top (
 	wire        mi_rlast;
 
 	// HyperRAM PHY
+`ifdef MEM_HRAM
 	wire [ 1:0] phy_ck_en;
 
 	wire [ 3:0] phy_rwds_in;
@@ -135,6 +145,16 @@ module top (
 	wire [ 7:0] phy_cfg_wdata;
 	wire [ 7:0] phy_cfg_rdata;
 	wire        phy_cfg_stb;
+`endif
+
+	// QPI PHY
+`ifdef MEM_QPI
+	wire [15:0] phy_io_i;
+	wire [15:0] phy_io_o;
+	wire  [3:0] phy_io_oe;
+	wire  [3:0] phy_clk_o;
+	wire  [2:0] phy_cs_o;
+`endif
 
 	// Wishbone
 	wire [WB_AW-1:0] wb_addr;
@@ -325,7 +345,7 @@ module top (
 
 	assign wb_ack[0] = wb_cyc[0];
 	assign wb_rdata[0] = 32'h00000000;
-`else
+`elsif MEM_HRAM
 	// Controller
 	hbus_memctrl hram_ctrl_I (
 		.phy_ck_en     (phy_ck_en),
@@ -389,6 +409,65 @@ module top (
 		.clk_rd        (clk_rd),
 		.sync_4x       (sync_4x),
 		.sync_rd       (sync_rd)
+	);
+`elsif MEM_QPI
+	// Controller
+	qpi_memctrl #(
+		.CMD_READ   (32'hEBEBEBEB),
+		.CMD_WRITE  (32'h02020202),
+		.DUMMY_CLK  (6),
+		.PAUSE_CLK  (8),
+		.FIFO_DEPTH (1),
+		.N_CS       (3),
+		.MODE_CS    (1),
+		.PHY_SPEED  (4),
+		.PHY_WIDTH  (1),
+		.PHY_DELAY  (4)
+	) memctrl_I (
+		.phy_io_i   (phy_io_i),
+		.phy_io_o   (phy_io_o),
+		.phy_io_oe  (phy_io_oe),
+		.phy_clk_o  (phy_clk_o),
+		.phy_cs_o   (phy_cs_o),
+		.mi_addr_cs (mi_addr[22:21]),
+		.mi_addr    ({1'b0, mi_addr[20:0], 2'b00 }),	/* 32 bits aligned */
+		.mi_len     (mi_len),
+		.mi_rw      (mi_rw),
+		.mi_valid   (mi_valid),
+		.mi_ready   (mi_ready),
+		.mi_wdata   (mi_wdata),
+		.mi_wack    (mi_wack),
+		.mi_wlast   (mi_wlast),
+		.mi_rdata   (mi_rdata),
+		.mi_rstb    (mi_rstb),
+		.mi_rlast   (mi_rlast),
+		.wb_wdata   (wb_wdata),
+		.wb_rdata   (wb_rdata[0]),
+		.wb_addr    (wb_addr[4:0]),
+		.wb_we      (wb_we),
+		.wb_cyc     (wb_cyc[0]),
+		.wb_ack     (wb_ack[0]),
+		.clk        (clk_1x),
+		.rst        (rst)
+	);
+
+	// PHY
+	qpi_phy_ice40_4x #(
+		.N_CS     (3),
+		.WITH_CLK (1),
+		.NEG_IN   (0)
+	) phy_I (
+		.pad_io    (qpi_io),
+		.pad_clk   (qpi_sck),
+		.pad_cs_n  (qpi_cs_n),
+		.phy_io_i  (phy_io_i),
+		.phy_io_o  (phy_io_o),
+		.phy_io_oe (phy_io_oe),
+		.phy_clk_o (phy_clk_o),
+		.phy_cs_o  (phy_cs_o),
+		.clk_1x    (clk_1x),
+		.clk_4x    (clk_4x),
+		.clk_sync  (sync_4x)
 	);
 `endif
 

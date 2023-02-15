@@ -7,7 +7,7 @@ ICEBRAM := icebram
 
 PROJ = riscv_linux
 
-PROJ_DEPS := no2misc no2ice40 no2hyperbus no2memcache
+PROJ_DEPS := no2misc no2ice40 no2memcache
 PROJ_RTL_SRCS := $(addprefix rtl/, \
 	platform.v \
 	soc_bram.v \
@@ -39,6 +39,18 @@ YOSYS_SYNTH_ARGS = -dffe_min_ce_use 4 -no-rw-check # -abc2
 NEXTPNR_ARGS  = --pre-pack data/clocks.py --pre-place $(CORE_no2ice40_DIR)/sw/serdes-nextpnr-place.py --seed $(SEED)
 NEXTPNR_ARGS += --timing-allow-fail
 
+# Build options
+MEM ?= hram
+
+ifeq ($(MEM),hram)
+	PROJ_DEPS += no2hyperbus
+	YOSYS_READ_ARGS += -DMEM_HRAM=1
+endif
+ifeq ($(MEM),qpi)
+	PROJ_DEPS += no2qpimem
+	YOSYS_READ_ARGS += -DMEM_QPI=1
+endif
+
 # Include default rules
 include ../build/project-rules.mk
 
@@ -46,7 +58,7 @@ include ../build/project-rules.mk
 # Firmware
 # --------
 
-FW_BOOT_HW  := ../../firmware/boot/boot-hram.hex
+FW_BOOT_HW  := ../../firmware/boot/boot-$(MEM).hex
 FW_BOOT_SIM := ../../firmware/boot/boot-sim.hex
 FW_BIOS     := ../../firmware/bios/bios.hex
 FW_DT       := ../../firmware/dt/ice40linux.hex

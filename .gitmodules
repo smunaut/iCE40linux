@@ -13,3 +13,6 @@
 [submodule "gateware/cores/no2memcache"]
 	path = gateware/cores/no2memcache
 	url = https://github.com/no2fpga/no2memcache.git
+[submodule "gateware/cores/no2qpimem"]
+	path = gateware/cores/no2qpimem
+	url = https://github.com/no2fpga/no2qpimem.git
