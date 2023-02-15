@@ -10,12 +10,13 @@ Hardware
 --------
 
 The target hardware platform is a Lattice UltraPlus 5k FPGA
-connected to 4 x 64 Mbits HyperRAM chips to provide it with
-32 Mbytes of RAM.
+with 32 Mbytes of RAM attached, either provided by 4 x 64 Mbits
+HyperRAM chips or 4 x 64 Mbits SPI PSRAM chips.
 
 * [iCEBreaker](https://1bitsquared.com/products/icebreaker)
 * [Quad HyperRAM PMOD](https://1bitsquared.com/products/pmod-hyperram)
   (Make sure to select the "Quad" variant)
+* [Quad SPI PSRAM PMOD](https://machdyne.com/product/qqspi-psram32/)
 
 
 How it works
@@ -28,7 +29,7 @@ A quick rundown of the involved parts and what they do.
 This is the HDL logic that uses the FPGA fabric to implement a RISC-V
 CPU with enough peripherals to run a RV32I Linux kernel. It's mainly
 composed of a [VexRiscv](https://github.com/SpinalHDL/VexRiscv/) CPU
-connected to an HyperRAM memory controller and associated cache.
+connected to a memory controller and associated cache.
 
 The set of peripheral is very minimal:
 
@@ -46,7 +47,7 @@ reset. This program is hard coded directly in the FPGA bitstream.
 Its role are:
 
  * Initialize UART for boot debug
- * Initialize the HyperRAM controller
+ * Initialize the memory controller
  * Load the various pieces from flash into RAM
  * Jump to the BIOS
 
@@ -109,6 +110,9 @@ You can add `CROSS=xxx` to select another RISCV toolchain cross prefix
 or `BOARD=xxx` to specify another board.
 
 The result file is in `build-tmp/riscv_linux_init.bin`
+
+The default is to build for the HyperRAM option, but if you are
+using SPI PSRAM instead, add `MEM=qpi` on the `make` command line.
 
 
 ### BIOS
@@ -201,6 +205,29 @@ make sure to check the following places :
 * The BIOS code (see `LINUX_IMAGE_BASE` and `LINUX_DTB_BASE`)
 * The device tree (`bootargs`, `memory` node, `reserved-memory`, flash
   partition layout)
+
+
+Overclocking
+------------
+
+By default the core is run at 15 MHz which is about the fmax given
+by `nextpnr`. However there is some margin and I have added an option
+to instead run everything at 20 MHz.
+
+To do so, build the gateware with:
+
+```bash
+cd iCE40linux/gateware/riscv_linux
+make clean
+make clean-fw
+make OVERCLOCK=1 bin-init
+```
+
+This will rebuild the gateware for 20 MHz.
+
+You will also need to update the BIOS and add `UART_DIV=18` on the
+`make` command. And then edit the `ice40linux.dts` to change all
+references from `15000000` to `20000000`.
 
 
 License
