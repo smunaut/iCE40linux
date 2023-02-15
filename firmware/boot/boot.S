@@ -14,6 +14,10 @@
 //#define MEM_HRAM
 //#define MEM_QPI
 
+#ifndef UART_DIV
+# define UART_DIV 13
+#endif
+
 /* Config */
 	.equ	HRAM_BASE, 0x80000000
 	.equ	QPI_BASE,  0x80000000
@@ -33,7 +37,7 @@ _start:
 #ifdef BOOT_DEBUG
 		// Set UART divisor
 	li		a0, UART_BASE
-	li		a1, 13
+	li		a1, UART_DIV
 	sw		a1, 4(a0)
 
 		// Output banner

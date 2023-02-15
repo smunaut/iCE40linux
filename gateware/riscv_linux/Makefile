@@ -51,6 +51,15 @@ ifeq ($(MEM),qpi)
 	YOSYS_READ_ARGS += -DMEM_QPI=1
 endif
 
+OVERCLOCK ?= 0
+
+ifeq ($(OVERCLOCK),1)
+	UART_DIV := 18
+	YOSYS_READ_ARGS += -DOVERCLOCK=1
+else
+	UART_DIV := 13
+endif
+
 # Include default rules
 include ../build/project-rules.mk
 
@@ -69,10 +78,10 @@ $(BUILD_TMP)/boot.hex:
 
 # Build of BootLoader, BIOS code and DTB
 ../../firmware/boot/%.hex: _force_run_
-	make -C ../../firmware/boot/ $*.hex
+	make -C ../../firmware/boot/ UART_DIV=$(UART_DIV) $*.hex
 
 ../../firmware/bios/%.hex: _force_run_
-	make -C ../../firmware/bios/ $*.hex
+	make -C ../../firmware/bios/ UART_DIV=$(UART_DIV) $*.hex
 
 ../../firmware/dt/ice40linux.dtb: _force_run_
 	make -C ../../firmware/dt/ ice40linux.dtb
@@ -86,6 +95,13 @@ $(BUILD_TMP)/boot-hw.hex: $(FW_BOOT_HW) $(FW_BIOS)
 
 $(BUILD_TMP)/boot-sim.hex: $(FW_BOOT_SIM) $(FW_BIOS)
 	./sw/hexmerge.py 0:$(FW_BOOT_SIM) 256:$(FW_BIOS) > $@
+
+# Clean
+clean-fw:
+	make -C ../../firmware/boot/ clean
+	make -C ../../firmware/bios/ clean
+	make -C ../../firmware/dt/ clean
+.PHONY: clean-fw
 
 # Force call to update .hex from other Makefiles
 _force_run_:

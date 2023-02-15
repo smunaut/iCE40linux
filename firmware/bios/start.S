@@ -9,6 +9,10 @@
 
 #define BOOT_DEBUG
 
+#ifndef UART_DIV
+# define UART_DIV 13
+#endif
+
 	.section .text.start
 	.global _start
 _start:
@@ -16,7 +20,7 @@ _start:
 #ifdef BOOT_DEBUG
 	// Set UART divisor
 	li a0, 0x81000000
-	li a1, 13
+	li a1, UART_DIV
 	sw a1, 4(a0)
 
 	// Output '1'
